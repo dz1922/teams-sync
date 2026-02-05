@@ -36,6 +36,9 @@ router.post('/', async (req: Request, res: Response) => {
       return res.status(404).json({ error: `Persons not found: ${missingIds.join(', ')}` });
     }
 
+    // Check if MOCK_MODE is enabled
+    const mockMode = process.env.MOCK_MODE === 'true';
+
     // Collect all accounts grouped by tenant
     const tenantMap = new Map<
       string,
@@ -60,25 +63,43 @@ router.post('/', async (req: Request, res: Response) => {
     const allSchedules = new Map<string, ScheduleResponse>();
     const errors: Array<{ tenantId: string; error: string }> = [];
 
-    for (const { tenant, emails } of tenantMap.values()) {
-      try {
-        const client = createGraphClient(
-          tenant.azureTenantId,
-          tenant.azureAppId,
-          tenant.azureAppSecret
-        );
-        const schedules = await getSchedule(
-          client,
-          emails,
-          startTime,
-          endTime,
-          timezone || 'UTC'
-        );
-        for (const schedule of schedules) {
-          allSchedules.set(schedule.email, schedule);
+    // If no accounts linked OR in mock mode, use mock emails based on person IDs
+    if (tenantMap.size === 0 || mockMode) {
+      console.log('[MOCK] No accounts linked or mock mode enabled, using mock schedules');
+      const mockEmails = persons.map(p => `${p.displayName.toLowerCase().replace(/\s+/g, '.')}@mock.test`);
+      const schedules = await getSchedule(
+        null,
+        mockEmails,
+        startTime,
+        endTime,
+        timezone || 'UTC'
+      );
+      for (let i = 0; i < schedules.length; i++) {
+        allSchedules.set(schedules[i].email, schedules[i]);
+        emailToPersonId.set(schedules[i].email, persons[i].id);
+      }
+    } else {
+      // Real mode - fetch from Graph API
+      for (const { tenant, emails } of tenantMap.values()) {
+        try {
+          const client = createGraphClient(
+            tenant.azureTenantId,
+            tenant.azureAppId,
+            tenant.azureAppSecret
+          );
+          const schedules = await getSchedule(
+            client,
+            emails,
+            startTime,
+            endTime,
+            timezone || 'UTC'
+          );
+          for (const schedule of schedules) {
+            allSchedules.set(schedule.email, schedule);
+          }
+        } catch (error: any) {
+          errors.push({ tenantId: tenant.id, error: error.message });
         }
-      } catch (error: any) {
-        errors.push({ tenantId: tenant.id, error: error.message });
       }
     }
 
