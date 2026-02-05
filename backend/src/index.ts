@@ -28,13 +28,15 @@ app.use('/api/schedule', scheduleRouter);
 app.use('/api/recommend', recommendRouter);
 
 // Serve static frontend files
-app.use(express.static(path.join(__dirname, '../public')));
+const publicPath = path.join(process.cwd(), 'public');
+app.use(express.static(publicPath));
 
 // SPA fallback - serve index.html for all non-API routes
-app.get('*', (req, res) => {
-  if (!req.path.startsWith('/api')) {
-    res.sendFile(path.join(__dirname, '../public/index.html'));
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    return next();
   }
+  res.sendFile(path.join(publicPath, 'index.html'));
 });
 
 // Error handler
