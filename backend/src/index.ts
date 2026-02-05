@@ -1,6 +1,7 @@
 import 'isomorphic-fetch';
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import dotenv from 'dotenv';
 import tenantsRouter from './routes/tenants';
 import personsRouter from './routes/persons';
@@ -25,6 +26,16 @@ app.use('/api/tenants', tenantsRouter);
 app.use('/api/persons', personsRouter);
 app.use('/api/schedule', scheduleRouter);
 app.use('/api/recommend', recommendRouter);
+
+// Serve static frontend files
+app.use(express.static(path.join(__dirname, '../public')));
+
+// SPA fallback - serve index.html for all non-API routes
+app.get('*', (req, res) => {
+  if (!req.path.startsWith('/api')) {
+    res.sendFile(path.join(__dirname, '../public/index.html'));
+  }
+});
 
 // Error handler
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
