@@ -21,5 +21,8 @@ RUN npm run build
 ENV PORT=3000
 EXPOSE 3000
 
+# Create startup script
+RUN echo '#!/bin/sh\nset -e\necho "Running prisma db push..."\nnpx prisma db push --accept-data-loss\necho "Starting server..."\nnode dist/index.js' > /app/start.sh && chmod +x /app/start.sh
+
 # Start command
-CMD npx prisma db push --accept-data-loss && node dist/index.js
+CMD ["/app/start.sh"]
