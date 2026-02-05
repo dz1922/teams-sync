@@ -28,7 +28,7 @@ app.use('/api/schedule', scheduleRouter);
 app.use('/api/recommend', recommendRouter);
 
 // Serve static frontend files
-const publicPath = path.join(process.cwd(), 'public');
+const publicPath = path.join(__dirname, 'public');
 app.use(express.static(publicPath));
 
 // SPA fallback - serve index.html for all non-API routes
