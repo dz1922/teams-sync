@@ -1,4 +1,4 @@
-import { TimeSlot } from '../types';
+import type { TimeSlot } from '../types';
 
 interface TimeSlotsProps {
   slots: TimeSlot[];

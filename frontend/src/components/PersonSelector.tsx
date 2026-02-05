@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Person } from '../types';
+import type { Person } from '../types';
 import { personsApi } from '../api/client';
 
 interface PersonSelectorProps {

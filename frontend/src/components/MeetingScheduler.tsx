@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { PersonSelector } from './PersonSelector';
 import { TimeSlots } from './TimeSlots';
-import { TimeSlot, RecommendationResponse } from '../types';
+import type { TimeSlot, RecommendationResponse } from '../types';
 import { recommendApi } from '../api/client';
 
 export function MeetingScheduler() {
