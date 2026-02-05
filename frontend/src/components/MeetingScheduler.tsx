@@ -104,20 +104,21 @@ export function MeetingScheduler() {
       {results && (
         <div className="results">
           <div className="results-meta">
-            Found {results.recommendations.length} available slots for {results.meta.personsCount} people
+            🎯 Top {Math.min(5, results.recommendations.length)} recommendations 
+            (from {results.recommendations.length} available slots)
           </div>
 
           <TimeSlots
-            slots={results.recommendations}
+            slots={results.recommendations.slice(0, 5)}
             onSelect={handleSelectSlot}
-            title="✅ Available Times"
+            title="✅ Best Available Times"
           />
 
-          {results.alternativesWithConflicts.length > 0 && (
+          {results.recommendations.length === 0 && results.alternativesWithConflicts.length > 0 && (
             <TimeSlots
-              slots={results.alternativesWithConflicts}
+              slots={results.alternativesWithConflicts.slice(0, 3)}
               onSelect={() => {}}
-              title="⚠️ Alternatives (with conflicts)"
+              title="⚠️ Alternatives (some conflicts)"
             />
           )}
 
