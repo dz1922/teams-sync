@@ -21,6 +21,20 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Database setup endpoint (one-time use)
+app.post('/api/setup', async (req, res) => {
+  try {
+    const { execSync } = await import('child_process');
+    const output = execSync('npx prisma db push --accept-data-loss', { 
+      encoding: 'utf-8',
+      timeout: 60000 
+    });
+    res.json({ success: true, output });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message, stderr: error.stderr });
+  }
+});
+
 // API routes
 app.use('/api/tenants', tenantsRouter);
 app.use('/api/persons', personsRouter);
