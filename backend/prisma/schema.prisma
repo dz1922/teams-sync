@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id             String    @id @default(uuid())
+  name           String
+  domain         String    @unique
+  azureTenantId  String    
+  azureAppId     String
+  azureAppSecret String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  accounts       Account[]
+}
+
+model Person {
+  id           String    @id @default(uuid())
+  displayName  String
+  timezone     String    @default("UTC")
+  flexibility  String    @default("medium") // low, medium, high
+  workingHours Json      // { monday: [{start, end}], ... }
+  overrides    Json?     // [{ date, available, reason }]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  accounts     Account[]
+}
+
+model Account {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  isPrimary Boolean  @default(false)
+  personId  String
+  person    Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([personId, tenantId])
+}
