@@ -32,6 +32,9 @@ export interface SlotDetail {
   localTime: string;
   status: 'core' | 'edge' | 'flexible' | 'outside';
   isBusy: boolean;
+  busyUntil?: string;
+  nextBusy?: string;
+  scheduleContext?: string;
 }
 
 export interface TimeSlot {

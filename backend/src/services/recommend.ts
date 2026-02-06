@@ -14,6 +14,10 @@ export interface SlotDetail {
   localTime: string;
   status: 'core' | 'edge' | 'flexible' | 'outside';
   isBusy: boolean;
+  // New: detailed schedule context
+  busyUntil?: string; // When current meeting ends (if busy)
+  nextBusy?: string;  // When next meeting starts (if free)
+  scheduleContext?: string; // Human-readable context
 }
 
 export interface TimeSlot {
@@ -55,27 +59,52 @@ export function recommendSlots(
 
       // Check if person is busy (from any of their accounts)
       let isBusy = false;
+      let busyUntil: string | undefined;
+      let nextBusy: string | undefined;
+      let scheduleContext: string | undefined;
+
       for (const [email, schedule] of schedules.entries()) {
         if (emailToPersonId.get(email) === person.personId) {
-          // Parse availability view if available
-          if (schedule.availabilityView) {
-            const slotIndex = Math.floor(
-              (current.getTime() - startRange.getTime()) / (30 * 60 * 1000)
-            );
-            if (schedule.availabilityView[slotIndex] !== '0') {
+          // Get all busy items for context
+          const busyItems = schedule.scheduleItems
+            .filter(item => item.status === 'busy')
+            .map(item => ({
+              start: new Date(item.start),
+              end: new Date(item.end),
+            }))
+            .sort((a, b) => a.start.getTime() - b.start.getTime());
+
+          // Check if currently busy and find when it ends
+          for (const item of busyItems) {
+            if (item.start < slotEnd && item.end > current) {
               isBusy = true;
+              busyUntil = formatLocalTime(item.end, person.timezone);
+              const minsUntilFree = Math.round((item.end.getTime() - current.getTime()) / 60000);
+              if (minsUntilFree > 0 && minsUntilFree <= 60) {
+                scheduleContext = `Meeting ends in ${minsUntilFree} min`;
+              } else {
+                scheduleContext = `Busy until ${busyUntil}`;
+              }
               break;
             }
           }
-          // Or check scheduleItems
-          for (const item of schedule.scheduleItems) {
-            const itemStart = new Date(item.start);
-            const itemEnd = new Date(item.end);
-            if (item.status === 'busy' && itemStart < slotEnd && itemEnd > current) {
-              isBusy = true;
-              break;
+
+          // If not busy, find next meeting
+          if (!isBusy) {
+            for (const item of busyItems) {
+              if (item.start > current) {
+                nextBusy = formatLocalTime(item.start, person.timezone);
+                const minsUntilBusy = Math.round((item.start.getTime() - slotEnd.getTime()) / 60000);
+                if (minsUntilBusy >= 0 && minsUntilBusy <= 30) {
+                  scheduleContext = `Next meeting in ${minsUntilBusy} min`;
+                } else if (minsUntilBusy > 30 && minsUntilBusy <= 120) {
+                  scheduleContext = `Free until ${nextBusy}`;
+                }
+                break;
+              }
             }
           }
+
           if (isBusy) break;
         }
       }
@@ -95,6 +124,9 @@ export function recommendSlots(
         localTime: formatFullLocalTime(current, person.timezone),
         status,
         isBusy,
+        busyUntil,
+        nextBusy,
+        scheduleContext,
       });
     }
 

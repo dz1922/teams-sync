@@ -60,6 +60,11 @@ export function TimeSlots({ slots, onSelect, title }: TimeSlotsProps) {
                   <span className="detail-icon">{getStatusIcon(detail.status, detail.isBusy)}</span>
                   <span className="detail-name">{detail.displayName}</span>
                   <span className="detail-time">{detail.localTime}</span>
+                  {detail.scheduleContext && (
+                    <span className={`detail-context ${detail.isBusy ? 'busy-context' : 'free-context'}`}>
+                      {detail.scheduleContext}
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>

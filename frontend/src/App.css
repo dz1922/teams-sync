@@ -295,11 +295,30 @@ body {
 
 .detail-name {
   font-weight: 500;
+  flex-shrink: 0;
 }
 
 .detail-time {
   color: #666;
+  flex-shrink: 0;
+}
+
+.detail-context {
+  font-size: 0.75rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.75rem;
   margin-left: auto;
+  white-space: nowrap;
+}
+
+.busy-context {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.free-context {
+  background: #e8f5e9;
+  color: #2e7d32;
 }
 
 .select-btn {
